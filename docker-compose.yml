@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: network_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+    working_dir: /app/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: network_frontend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./streamlit_app:/app
+      - ./app:/app/app
+    working_dir: /app
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: streamlit run streamlit_app.py
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    container_name: network_tests
+    volumes:
+      - ./app:/app/app
+    working_dir: /app/app
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - PYTHONPATH=/app
+    command: pytest app/tests/test_simulate.py --maxfail=1 --disable-warnings -q

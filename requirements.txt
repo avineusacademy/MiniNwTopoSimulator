@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+databases[sqlite]
+streamlit
+pytest
+requests
+httpx 
+networkx
