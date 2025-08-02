@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-databases[sqlite]
-requests
-sqlmodel>=0.0.8
-pyvis
