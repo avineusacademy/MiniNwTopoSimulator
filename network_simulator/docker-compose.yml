@@ -1,0 +1,39 @@
+services:
+  backend:
+    build: .
+    container_name: network_backend
+    ports:
+      - "8000:8000"
+    working_dir: /app/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - .:/app
+
+  frontend:
+    build: .
+    container_name: network_frontend
+    ports:
+      - "8501:8501"
+    working_dir: /app/streamlit_app
+    command: streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    environment:
+      - API_BASE=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  db_seed:
+    build: .
+    container_name: db_seed
+    working_dir: /app/app
+    command: python seed_db.py
+    volumes:
+      - .:/app
